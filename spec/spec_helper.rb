@@ -44,6 +44,24 @@ RSpec.configure do |config|
   # triggering implicit auto-inclusion in groups with matching metadata.
   config.shared_context_metadata_behavior = :apply_to_host_groups
 
+  # テスト全体の前に実行する処理をブロックで記述
+  config.before(:suite) do
+    # データベースをCleanする方法を'transaction'に指定
+    DatabaseCleaner.strategy = :transaction
+    # このタイミングで'transaction'でデータベースをCleanしておく
+    DatabaseCleaner.clean_with(:truncation)
+  end
+
+  # 各exampleの前および後に実行する処理をブロックで記述
+  config.around(:each) do |example|
+    DatabaseCleaner.cleaning do
+      # ここに処理を記述する
+      # ここがexampleの実行タイミング
+      example.run
+      # ここに処理を記述する ##
+    end
+  end
+
 # The settings below are suggested to provide a good initial experience
 # with RSpec, but feel free to customize to your heart's content.
 =begin
