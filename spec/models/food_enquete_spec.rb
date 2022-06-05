@@ -30,10 +30,10 @@ RSpec.describe FoodEnquete, type: :model do
   end
 
   describe '入力項目の有無' do
+    let(:new_enquete) { FoodEnquete.new }
     context '必須入力であること' do
       # [Point.3-4-1]itを複数書くことができます。
       it 'お名前が必須であること' do
-        new_enquete = FoodEnquete.new
         # [Point.3-4-2]バリデーションエラーが発生することを検証します。
         expect(new_enquete).not_to be_valid
         # [Point.3-4-3]必須入力のメッセージが含まれることを検証します。
@@ -41,14 +41,12 @@ RSpec.describe FoodEnquete, type: :model do
       end
 
       it 'メールアドレスが必須であること' do
-        new_enquete = FoodEnquete.new
         expect(new_enquete).not_to be_valid
         expect(new_enquete.errors[:mail]).to include(I18n.t('errors.messages.blank'))
       end
 
       # [Point.3-4-1]itを複数書くことができます。
       it '登録できないこと' do
-        new_enquete = FoodEnquete.new
 
         # [Point.3-4-4]保存に失敗することを検証します。
         expect(new_enquete.save).to be_falsey
@@ -56,7 +54,6 @@ RSpec.describe FoodEnquete, type: :model do
     end
     context '任意入力であること' do
       it 'ご意見・ご要望が任意であること' do
-        new_enquete = FoodEnquete.new
         expect(new_enquete).not_to be_valid
         # [Point.3-4-6]必須入力のメッセージが含まれないことを検証します。
         expect(new_enquete.errors[:request]).not_to include(I18n.t('errors.messages.blank'))
@@ -83,9 +80,12 @@ RSpec.describe FoodEnquete, type: :model do
       end
     end
     context 'メールアドレスを確認すること' do
+      before do
+        FactoryBot.create(:food_enquete_tanaka)
+      end
+
       it '同じメールアドレスで再び回答できないこと' do
         # [Point.3-6-1]1つ目のテストデータを作成します。
-        FactoryBot.create(:food_enquete_tanaka)
 
         # [Point.3-6-2]2つ目のテストデータを作成します。
         re_enquete_tanaka = FactoryBot.build(:food_enquete_tanaka, food_id: 0, score: 1, present_id: 0, request: "スープがぬるかった")
@@ -95,6 +95,14 @@ RSpec.describe FoodEnquete, type: :model do
         expect(re_enquete_tanaka.errors[:mail]).to include(I18n.t('errors.messages.taken'))
         expect(re_enquete_tanaka.save).to be_falsey
         expect(FoodEnquete.all.size).to eq 1
+      end
+      it '異なるメールアドレスで回答できること' do
+
+        enquete_yamada = FactoryBot.build(:food_enquete_yamada)
+
+        expect(enquete_yamada).to be_valid
+        enquete_yamada.save
+        expect(FoodEnquete.all.size).to eq 2
       end
     end
   end
@@ -122,5 +130,10 @@ RSpec.describe FoodEnquete, type: :model do
         expect(new_enquete.errors[:mail]).to include(I18n.t('errors.messages.invalid'))
       end
     end
+  end
+  describe '共通メソッド' do
+    # [Point.3-12-3]共通化するテストケースを定義します。
+    it_behaves_like '価格の表示'
+    it_behaves_like '満足度の表示'
   end
 end
